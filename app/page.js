@@ -1,101 +1,234 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import {
+  getTrending,
+  getRecent,
+  getUnlimited,
+  getRecommendations,
+  getPustaka,
+} from "@/lib/api";
+import Hero from "@/components/Home/Hero";
+import Carousel from "@/components/Home/Carousel";
+import SectionHeader from "@/components/Comic/SectionHeader";
+import Top10 from "@/components/Home/Top10";
+import QuotePanel from "@/components/Bonus/QuotePanel";
+import MoodRecommend from "@/components/Bonus/MoodRecommend";
+import GenreExplorer from "@/components/Home/GenreExplorer";
+
+function bySlug(arr) {
+  const seen = new Set();
+  return arr.filter((c) => {
+    const key = c.slug + "|" + (c.processedLink || "");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function filterClean(arr) {
+  return arr.filter(
+    (c) =>
+      c &&
+      c.title &&
+      !String(c.title).toLowerCase().includes("apk") &&
+      !String(c.chapter || "").toLowerCase().includes("download")
+  );
+}
+
+export default function HomePage() {
+  const [trending, setTrending] = useState([]);
+  const [recent, setRecent] = useState([]);
+  const [unlimited, setUnlimited] = useState([]);
+  const [recommend, setRecommend] = useState([]);
+  const [library, setLibrary] = useState([]);
+  const [loading, setLoading] = useState({
+    trending: true,
+    recent: true,
+    unlimited: true,
+    recommend: true,
+    library: true,
+  });
+
+  useEffect(() => {
+    let alive = true;
+    const finish = (key) =>
+      setLoading((s) => ({ ...s, [key]: false }));
+
+    getTrending()
+      .then((d) => alive && setTrending(bySlug(filterClean(d))))
+      .catch(() => {})
+      .finally(() => finish("trending"));
+
+    getRecent()
+      .then((d) => alive && setRecent(bySlug(filterClean(d))))
+      .catch(() => {})
+      .finally(() => finish("recent"));
+
+    getUnlimited()
+      .then((d) => alive && setUnlimited(bySlug(filterClean(d))))
+      .catch(() => {})
+      .finally(() => finish("unlimited"));
+
+    getRecommendations()
+      .then((d) => alive && setRecommend(bySlug(filterClean(d))))
+      .catch(() => {})
+      .finally(() => finish("recommend"));
+
+    getPustaka(1)
+      .then((d) => alive && setLibrary(bySlug(filterClean(d))))
+      .catch(() => {})
+      .finally(() => finish("library"));
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Heuristic categorisation by `type` field returned per item.
+  const categorize = (arr, kind) =>
+    arr.filter(
+      (c) =>
+        String(c.type || "").toLowerCase().includes(kind) ||
+        String(c.category || "").toLowerCase().includes(kind)
+    );
+
+  const merged = bySlug([...recent, ...unlimited, ...library, ...recommend, ...trending]);
+  const manga = categorize(merged, "manga");
+  const manhwa = categorize(merged, "manhwa");
+  const manhua = categorize(merged, "manhua");
+  const ongoing = merged.filter((c) =>
+    String(c.status || "").toLowerCase().includes("ongoing")
+  );
+  const completed = merged.filter((c) =>
+    String(c.status || "").toLowerCase().includes("complete")
+  );
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <>
+      <Hero />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Hot now"
+          title="Trending Comics"
+          subtitle="Top picks dari pembaca minggu ini, di-rank oleh skor real-time."
+          href="/search?q=trending"
+        />
+        <Carousel items={trending} loading={loading.trending} />
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Fresh ink"
+          title="Recently Updated"
+          subtitle="Chapter terbaru dari series favoritmu, baru saja masuk."
+          href="/search?q=update"
+        />
+        <Carousel items={recent} loading={loading.recent} />
+      </section>
+
+      <section className="container-page grid gap-10 py-10 lg:grid-cols-[1.6fr_1fr]">
+        <div>
+          <SectionHeader
+            kicker="Popular"
+            title="Popular This Week"
+            subtitle="Series yang lagi naik daun di seluruh ComicVerse."
+          />
+          <Carousel items={unlimited} loading={loading.unlimited} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div>
+          <SectionHeader
+            kicker="Top 10"
+            title="Top 10 Weekly"
+            subtitle="Ranking top minggu ini."
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <Top10 />
+        </div>
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Status: ongoing"
+          title="Ongoing Series"
+          subtitle="Petualangan yang masih berlangsung. Ikuti dari sekarang."
+        />
+        <Carousel
+          items={ongoing.length ? ongoing : merged.slice(0, 18)}
+          loading={loading.recent && loading.unlimited && loading.library}
+        />
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Status: completed"
+          title="Completed Series"
+          subtitle="Cerita-cerita yang siap kamu marathon dari awal sampai akhir."
+        />
+        <Carousel
+          items={completed.length ? completed : merged.slice(8, 26)}
+          loading={loading.library}
+        />
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Japanese roots"
+          title="Manga"
+          subtitle="Klasik dan modern dari Jepang."
+        />
+        <Carousel
+          items={manga.length ? manga : merged.slice(0, 16)}
+          loading={loading.library && loading.recent}
+        />
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Korean wave"
+          title="Manhwa"
+          subtitle="Vertical-scroll & full-color terbaik dari Korea."
+        />
+        <Carousel
+          items={manhwa.length ? manhwa : merged.slice(4, 20)}
+          loading={loading.library && loading.recent}
+        />
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Chinese epics"
+          title="Manhua"
+          subtitle="Sejarah, fantasi, dan cultivation Tiongkok."
+        />
+        <Carousel
+          items={manhua.length ? manhua : merged.slice(8, 24)}
+          loading={loading.library && loading.recent}
+        />
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="Find your vibe"
+          title="Genre Explorer"
+          subtitle="Lompat antar dunia hanya dengan sekali klik."
+          href="/genres"
+        />
+        <GenreExplorer />
+      </section>
+
+      <section className="container-page py-10">
+        <SectionHeader
+          kicker="AI · Mood matcher"
+          title="Recommend by Mood"
+          subtitle="Cerita kamu hari ini dimulai dari rasa, bukan judul."
+        />
+        <MoodRecommend />
+      </section>
+
+      <section className="container-page py-10">
+        <QuotePanel />
+      </section>
+    </>
   );
 }

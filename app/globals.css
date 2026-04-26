@@ -229,3 +229,23 @@ html, body {
   animation: floatSlow 9s ease-in-out infinite;
   opacity: 0.7;
 }
+
+/* Mobile: reduce GPU-heavy effects */
+@media (max-width: 640px) {
+  .comic-card::before,
+  .comic-card::after { display: none; }
+  .particles::before { animation: none; opacity: 0.45; }
+  .group:hover .group-hover\:scale-\[1\.04\] { transform: none; }
+}
+
+/* Respect user motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

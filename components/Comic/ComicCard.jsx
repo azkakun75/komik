@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Bookmark, Star, BookOpen } from "lucide-react";
 import { useLibrary } from "@/store/library";
 import { safeImage } from "@/lib/utils";
@@ -16,13 +15,7 @@ export default function ComicCard({ comic, index = 0, big = false }) {
   )}`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.45, delay: Math.min(index * 0.04, 0.4) }}
-      className={cn("comic-card group relative", big && "h-full")}
-    >
+    <div className={cn("comic-card group relative animate-fade-up", big && "h-full")}>
       <Link
         href={link}
         className={cn(
@@ -97,6 +90,6 @@ export default function ComicCard({ comic, index = 0, big = false }) {
           )}
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }

@@ -22,7 +22,7 @@ export default function ContinueReadingPopup() {
     if (entries.length === 0) return;
     entries.sort((a, b) => (b.readAt || 0) - (a.readAt || 0));
     setLatest(entries[0]);
-    const t = setTimeout(() => setShow(true), 1200);
+    const t = setTimeout(() => setShow(true), 2500);
     return () => clearTimeout(t);
   }, [history]);
 

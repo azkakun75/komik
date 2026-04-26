@@ -49,7 +49,6 @@ export default function Top10() {
           <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-elevated">
             {!loading && c?.image ? (
               <Image
-                unoptimized
                 src={safeImage(c.image)}
                 alt={c.title}
                 fill

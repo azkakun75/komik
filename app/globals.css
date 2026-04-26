@@ -191,7 +191,8 @@ html, body {
   width: 100%;
 }
 .reader-strip > img,
-.reader-strip > .reader-img {
+.reader-strip > .reader-img,
+.reader-strip > .reader-img-slot {
   display: block;
   width: 100%;
   max-width: 980px;
@@ -199,8 +200,44 @@ html, body {
   margin: 0 auto;
 }
 .reader-strip.long-strip > img,
-.reader-strip.long-strip > .reader-img {
+.reader-strip.long-strip > .reader-img,
+.reader-strip.long-strip > .reader-img-slot {
   margin: 0;
+}
+/* Reserve vertical space so unmounted pages still push the scroll height
+ * outward, letting the IntersectionObserver fire predictably even before any
+ * <img> has measured itself. The 140vw heuristic matches the typical 2:3
+ * aspect ratio used by webtoon panels on portrait viewports. */
+.reader-img-slot {
+  width: 100%;
+  min-height: 140vw;
+  max-width: 980px;
+  background: rgba(127, 127, 127, 0.08);
+}
+.reader-img-slot:has(img) {
+  min-height: 0;
+  background: transparent;
+}
+.reader-img-placeholder {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(127, 127, 127, 0.06) 0%,
+      rgba(127, 127, 127, 0.14) 50%,
+      rgba(127, 127, 127, 0.06) 100%
+    );
+  background-size: 200% 100%;
+  animation: reader-shimmer 1.4s linear infinite;
+}
+@keyframes reader-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* page-flip animation */

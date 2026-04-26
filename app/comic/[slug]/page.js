@@ -77,7 +77,6 @@ export default function ComicDetailPage() {
       <div className="absolute inset-x-0 top-0 -z-10 h-[420px] overflow-hidden">
         {detail?.image && (
           <Image
-            unoptimized
             src={safeImage(detail.image)}
             alt=""
             fill
@@ -120,7 +119,6 @@ export default function ComicDetailPage() {
                 className="relative mx-auto aspect-[2/3] w-full max-w-[260px] overflow-hidden rounded-2xl border border-border/70 bg-elevated shadow-glow"
               >
                 <Image
-                  unoptimized
                   src={safeImage(detail.image)}
                   alt={detail.title}
                   fill

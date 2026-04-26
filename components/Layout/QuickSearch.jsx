@@ -142,7 +142,6 @@ export default function QuickSearch() {
                     <div className="relative h-12 w-9 overflow-hidden rounded bg-elevated">
                       {r.image && (
                         <Image
-                          unoptimized
                           src={safeImage(r.image)}
                           alt={r.title}
                           fill

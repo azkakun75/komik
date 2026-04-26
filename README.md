@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AFZN STUDIO COMICVERSE
 
-## Getting Started
+> **Read Comics Beyond Limits.** Premium digital comic reader (manga · manhwa · manhua) — built by **Azka Fatkhunnuha** (AFZN Studio).
 
-First, run the development server:
+A Next.js 14 web app that consumes the public **Sanka Vollerei Comic REST API** and presents it through a luxury, multi-theme reading experience.
+
+---
+
+## ✨ Features
+
+- **4 distinct visual themes** (theme switcher persists locally):
+  - **Neo Crimson** — pitch-black / ink-red
+  - **Emerald Reader** — deep green-black / neon emerald
+  - **Royal Ink** — navy black / violet & silver
+  - **Manga Paper** — cream paper / black ink / red accent
+- **Premium vertical reader** — long-strip & paged modes, lazy loading, brightness, width, direction (LTR/RTL), fullscreen, auto-hide controls, top progress bar, end-of-chapter card with next/prev nav, bookmark, scroll-progress save.
+- **Library** (Zustand + persist) — favorites, reading history, bookmarked chapters, recently viewed.
+- **Live search** with infinite scroll + type filter (manga / manhwa / manhua).
+- **Genre Explorer** with dynamic genre detail pages.
+- **Bonus**: Random Comic, Surprise Me, Top 10 Weekly, Quote Panel generator, AI Mood Recommend, floating creator card, Quick Search (`⌘K`), Continue Reading popup, **PWA installable**.
+- **Loading intro** with ink spread + glow title + comic slash sweep.
+- **SEO** — dynamic metadata, sitemap, robots, manifest, theme-color.
+
+---
+
+## 🧩 API mapping
+
+The user-supplied endpoint list (`/comic/home`, `/comic/recent`, etc.) does not exist on the actual API. Endpoints have been auto-adapted to match the live Sanka Vollerei API (verified against `https://github.com/SankaVollereii/juju-manhwa-2.0`):
+
+| App section            | Real endpoint used                            |
+| ---------------------- | --------------------------------------------- |
+| Trending               | `GET /comic/trending`                         |
+| Recently Updated       | `GET /comic/terbaru`                          |
+| Popular / Unlimited    | `GET /comic/unlimited`                        |
+| Library / Pustaka      | `GET /comic/pustaka/:page`                    |
+| Recommendations        | `GET /comic/recommendations`                  |
+| Genres                 | `GET /comic/genres`                           |
+| Comic Detail           | `GET /comic/comic/:slug`                      |
+| Chapter pages          | `GET /comic/chapter<chapterLink>`             |
+| Search                 | `GET /comic/search?q=:query`                  |
+
+Override the base URL via `NEXT_PUBLIC_API_BASE` env var (defaults to `https://www.sankavollerei.com`).
+
+---
+
+## 🛠️ Tech stack
+
+- **Next.js 14** (App Router) + React 18
+- **Tailwind CSS** (CSS variables for theming)
+- **Framer Motion** (page/intro transitions, hero carousel)
+- **Zustand** (library/reader stores, persisted)
+- **Swiper.js** (homepage carousels)
+- **Axios** (HTTP)
+- **Lucide React** (icons)
+
+---
+
+## 🚀 Getting started
 
 ```bash
+# Install
+npm install
+
+# Dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Production build
+npm run build && npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app reads no auth keys from the API — it works out of the box.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Environment variables (optional)
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```env
+NEXT_PUBLIC_API_BASE=https://www.sankavollerei.com
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🌐 Deploy to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push this repo to GitHub.
+2. Import into Vercel (default Next.js preset is auto-detected).
+3. Optionally set `NEXT_PUBLIC_API_BASE` if you proxy the API through your own host.
+4. Done. Every push to `main` ships an auto-preview.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 👤 Creator
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Azka Fatkhunnuha** — Founder & Creative Director, AFZN Studio.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- TikTok: <https://tiktok.com/@azkafatkhunnuha>
+- Instagram: <https://instagram.com/abcdazkaaa>
+- Website: <https://azkafatkhunnuha.my.id>
+- Support: <https://sociabuzz.com/abcdazka/tribe>
+
+> © 2026 AFZN STUDIO COMICVERSE — Created with ❤ by Azka Fatkhunnuha.
+
+---
+
+## 📜 License
+
+MIT. Comic data is fetched from the third-party Sanka Vollerei API; this project does **not** host or store any comic content.

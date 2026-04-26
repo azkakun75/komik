@@ -14,6 +14,13 @@ export default function GenreDetailPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  // Reset pagination whenever the user navigates to a different genre so we
+  // never request `getGenreComics("romance", 3)` carrying state from the
+  // previously-viewed genre.
+  useEffect(() => {
+    setPage(1);
+  }, [slug]);
+
   useEffect(() => {
     let alive = true;
     setLoading(true);

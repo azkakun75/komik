@@ -53,7 +53,6 @@ export default function ContinueReadingPopup() {
             <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-elevated">
               {latest.image && (
                 <Image
-                  unoptimized
                   src={safeImage(latest.image)}
                   alt={latest.title || ""}
                   fill

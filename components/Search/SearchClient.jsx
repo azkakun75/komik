@@ -52,7 +52,8 @@ export default function SearchClient() {
     if (!committed) return;
     let alive = true;
     setLoading(true);
-    searchComics(committed)
+    setPage(1);
+    searchComics(committed, 1)
       .then((d) => alive && setResults(d))
       .catch(() => alive && setResults([]))
       .finally(() => alive && setLoading(false));

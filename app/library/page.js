@@ -55,7 +55,6 @@ export default function LibraryPage() {
                 >
                   <div className="relative aspect-[2/3] bg-elevated/60">
                     <Image
-                      unoptimized
                       src={safeImage(f.image)}
                       alt={f.title}
                       fill
@@ -114,7 +113,6 @@ export default function LibraryPage() {
                 >
                   {h.image && (
                     <Image
-                      unoptimized
                       src={safeImage(h.image)}
                       alt={h.title}
                       fill

@@ -23,6 +23,7 @@ import { useReader } from "@/store/reader";
 import { useLibrary } from "@/store/library";
 import { processChapterLink } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import ReaderImage from "@/components/Reader/ReaderImage";
 
 const widthMap = {
   narrow: "max-w-[640px]",
@@ -385,17 +386,7 @@ export default function ReaderClient() {
             pages.map((p, i) => {
               const src = typeof p === "string" ? p : p?.image || p?.url || p?.src;
               if (!src) return null;
-              return (
-                <img
-                  key={i + src}
-                  src={src}
-                  alt={`Page ${i + 1}`}
-                  loading={i < 2 ? "eager" : "lazy"}
-                  decoding="async"
-                  className="reader-img select-none"
-                  draggable={false}
-                />
-              );
+              return <ReaderImage key={i + src} src={src} index={i} />;
             })
           )}
         </div>

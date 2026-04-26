@@ -162,7 +162,6 @@ export default function Hero() {
                     className="relative h-full w-full overflow-hidden rounded-[1.6rem] border border-border/70 bg-elevated shadow-glow"
                   >
                     <Image
-                      unoptimized
                       src={safeImage(current.image)}
                       alt={current.title}
                       fill
@@ -197,7 +196,6 @@ export default function Hero() {
                     }
                   >
                     <Image
-                      unoptimized
                       src={safeImage(p.image)}
                       alt=""
                       fill

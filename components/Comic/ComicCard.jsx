@@ -30,7 +30,6 @@ export default function ComicCard({ comic, index = 0, big = false }) {
           )}
         >
           <Image
-            unoptimized
             src={safeImage(comic.image)}
             alt={comic.title}
             fill

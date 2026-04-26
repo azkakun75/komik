@@ -46,31 +46,62 @@ function isHostAllowed(hostname) {
 // last line of defence against SSRF: even when an attacker controls a domain
 // in the allowlist (e.g. via subdomain), we never want to issue requests to
 // internal-looking hostnames.
+function isInternalIPv4(h) {
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  if (a === 10) return true;
+  if (a === 127) return true;
+  if (a === 0) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a >= 224) return true; // multicast / reserved
+  return false;
+}
+
+// Recognise the IPv6 ranges we want to refuse: loopback (`::1`), unspecified
+// (`::`), unique-local (`fc00::/7` → first byte `fc` or `fd`), link-local
+// (`fe80::/10`), and IPv4-mapped/embedded forms that smuggle in an internal
+// IPv4 (`::ffff:169.254.169.254`, `::169.254.169.254`).
+function isInternalIPv6(h) {
+  if (!h.includes(":")) return false;
+  if (h === "::1" || h === "::") return true;
+  // IPv4-mapped / IPv4-compatible forms — pull out the trailing dotted-quad
+  // and re-use the IPv4 check.
+  const v4Tail = h.match(/(?:^|:)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (v4Tail && isInternalIPv4(v4Tail[1])) return true;
+  // Inspect the first hextet. Accept either bare or zero-padded forms.
+  const firstHextet = h.split(":")[0];
+  if (!firstHextet) {
+    // Started with `::`, which is loopback/unspecified or IPv4-mapped — both
+    // already handled above. Bail out conservatively.
+    return true;
+  }
+  const v = parseInt(firstHextet, 16);
+  if (Number.isNaN(v)) return false;
+  // fc00::/7 → 0xfc00 .. 0xfdff
+  if (v >= 0xfc00 && v <= 0xfdff) return true;
+  // fe80::/10 → top 10 bits == 1111111010xxxxxx → first hextet 0xfe80..0xfebf
+  if (v >= 0xfe80 && v <= 0xfebf) return true;
+  return false;
+}
+
+// Block hostnames that resolve to private/loopback/link-local/metadata
+// addresses or that are IP literals in those ranges. Strip the surrounding
+// brackets that `URL.hostname` keeps on IPv6 literals (e.g. `[::1]`).
 function isHostnameInternal(hostname) {
-  const h = String(hostname || "").toLowerCase();
+  let h = String(hostname || "").toLowerCase().trim();
   if (!h) return true;
+  if (h.startsWith("[") && h.endsWith("]")) {
+    h = h.slice(1, -1);
+  }
   if (h === "localhost") return true;
   if (h.endsWith(".localhost")) return true;
   if (h.endsWith(".internal")) return true;
   if (h.endsWith(".local")) return true;
-  // IPv4 literal checks.
-  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (m) {
-    const [a, b] = [Number(m[1]), Number(m[2])];
-    if (a === 10) return true;
-    if (a === 127) return true;
-    if (a === 0) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a >= 224) return true; // multicast / reserved
-  }
-  // IPv6 loopback / link-local / unique-local literals (URL hostnames carry
-  // them in `[…]` form which is stripped by the URL parser).
-  if (h === "::1" || h === "::") return true;
-  if (h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) {
-    return true;
-  }
+  if (isInternalIPv4(h)) return true;
+  if (isInternalIPv6(h)) return true;
   return false;
 }
 

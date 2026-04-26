@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getGenreComics, getGenres } from "@/lib/api";
@@ -13,19 +13,25 @@ export default function GenreDetailPage() {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-
-  // Reset pagination whenever the user navigates to a different genre so we
-  // never request `getGenreComics("romance", 3)` carrying state from the
-  // previously-viewed genre.
-  useEffect(() => {
-    setPage(1);
-  }, [slug]);
+  const lastSlugRef = useRef(slug);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    // When the user navigates to a different genre, force this fetch (and the
+    // next render) to start from page 1 instead of inheriting whatever page
+    // they were viewing on the previous genre. Doing the reset inline avoids
+    // a wasted upstream request that would otherwise fire with the stale page
+    // before a separate `setPage(1)` effect could land.
+    const slugChanged = lastSlugRef.current !== slug;
+    lastSlugRef.current = slug;
+    const effectivePage = slugChanged ? 1 : page;
+    if (slugChanged && page !== 1) {
+      setPage(1);
+    }
+
     Promise.all([
-      getGenreComics(slug || "", page).catch(() => []),
+      getGenreComics(slug || "", effectivePage).catch(() => []),
       getGenres()
         .then((g) => g)
         .catch(() => []),

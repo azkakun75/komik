@@ -55,7 +55,6 @@ async function proxy(request, { params }) {
         message: aborted
           ? "Upstream comic API took too long to respond."
           : "Could not reach the comic API.",
-        target,
       },
       { status: 504, headers: { "Cache-Control": "no-store" } }
     );

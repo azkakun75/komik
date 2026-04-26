@@ -7,13 +7,20 @@ import "swiper/css/navigation";
 import ComicCard from "@/components/Comic/ComicCard";
 import SkeletonCard from "@/components/Comic/SkeletonCard";
 
-export default function Carousel({ items, loading }) {
+export default function Carousel({ items, loading, emptyMessage }) {
   if (loading || !items) {
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
+      </div>
+    );
+  }
+  if (items.length === 0) {
+    return (
+      <div className="panel flex items-center justify-center p-10 text-sm text-subtext">
+        {emptyMessage || "Belum ada data untuk section ini."}
       </div>
     );
   }

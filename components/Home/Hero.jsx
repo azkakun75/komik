@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Sparkles, Flame, Star } from "lucide-react";
+import { Play, Sparkles, Flame, Star, AlertCircle, RefreshCcw } from "lucide-react";
 import { getTrending } from "@/lib/api";
 import { safeImage } from "@/lib/utils";
 
@@ -12,9 +12,13 @@ export default function Hero() {
   const [items, setItems] = useState([]);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
+    setLoading(true);
+    setError(null);
     getTrending()
       .then((d) => {
         if (!alive) return;
@@ -23,12 +27,15 @@ export default function Hero() {
           .slice(0, 6);
         setItems(filtered);
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (!alive) return;
+        setError(err?.message || "Gagal memuat trending");
+      })
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   useEffect(() => {
     if (items.length < 2) return;
@@ -94,6 +101,26 @@ export default function Hero() {
                     </Link>
                   </div>
                 </motion.div>
+              ) : error && !loading ? (
+                <div className="panel flex flex-col items-start gap-4 p-6">
+                  <div className="flex items-center gap-2 text-accent">
+                    <AlertCircle className="h-5 w-5" />
+                    <span className="text-sm font-semibold uppercase tracking-wider">
+                      Comic API not reachable
+                    </span>
+                  </div>
+                  <p className="text-sm text-subtext">
+                    Upstream source sedang lambat atau tidak bisa dihubungi.
+                    Coba lagi sebentar lagi.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setReloadKey((k) => k + 1)}
+                    className="btn-primary"
+                  >
+                    <RefreshCcw className="h-4 w-4" /> Retry
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-4">
                   <div className="h-12 w-3/4 rounded skeleton" />

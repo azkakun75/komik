@@ -97,6 +97,21 @@ app.post('/api/track', async (req, res) => {
   }
 });
 
+// Optional API key gate for read-only stats endpoints. When STATS_API_KEY is
+// set, all /api/stats/* endpoints require a matching X-Stats-Key header (or
+// `?key=` query param). When unset (default for local dev), endpoints stay
+// open so the existing dashboard "just works".
+const STATS_API_KEY = process.env.STATS_API_KEY || '';
+const requireStatsKey = (req, res, next) => {
+  if (!STATS_API_KEY) return next();
+  const provided = req.get('x-stats-key') || req.query.key || '';
+  if (provided !== STATS_API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  return next();
+};
+app.use('/api/stats', requireStatsKey);
+
 // Get statistics overview
 app.get('/api/stats/overview', (req, res) => {
   try {

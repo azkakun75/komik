@@ -47,9 +47,9 @@ const CardNewComic = ({ currentPage, setCurrentPage }) => {
             
             setHasNextPage(anyPageHasData);
 
-            const filteredComics = allRawComics.filter(item => 
-                !item.title.toLowerCase().includes('apk') && 
-                (item.latestChapter && !item.latestChapter.title.toLowerCase().includes('download'))
+            const filteredComics = allRawComics.filter(item =>
+                !(item.title || '').toLowerCase().includes('apk') &&
+                !(item.latestChapter?.title || '').toLowerCase().includes('download')
             );
 
             const processedComics = filteredComics.map(comic => {
@@ -57,7 +57,7 @@ const CardNewComic = ({ currentPage, setCurrentPage }) => {
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, '-')  
                     .replace(/^-+|-+$/g, '');  
-                const chapterNumber = comic.latestChapter?.title.split(' ').pop() || 'N/A';
+                const chapterNumber = comic.latestChapter?.title?.split(' ').pop() || 'N/A';
                 return {
                     title: comic.title,
                     image: comic.thumbnail,

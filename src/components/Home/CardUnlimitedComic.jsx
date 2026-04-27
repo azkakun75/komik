@@ -14,9 +14,9 @@ const CardUnlimitedComic = () => {
         try {
             const response = await axios.get('https://www.sankavollerei.com/comic/unlimited')
             const rawComics = response.data.comics || []
-            const filteredComics = rawComics.filter(item => 
-                !item.title.toLowerCase().includes('apk') && 
-                !item.chapter.toLowerCase().includes('download')
+            const filteredComics = rawComics.filter(item =>
+                !(item.title || '').toLowerCase().includes('apk') &&
+                !(item.chapter || '').toLowerCase().includes('download')
             )
             
             const processedComics = filteredComics.map(comic => {

@@ -16,9 +16,9 @@ const CardTrendingComic = () => {
 
       const rawComics = response.data.trending || []
 
-      const filteredComics = rawComics.filter(item => 
-        !item.title.toLowerCase().includes('apk') && 
-        !item.chapter.toLowerCase().includes('download')
+      const filteredComics = rawComics.filter(item =>
+        !(item.title || '').toLowerCase().includes('apk') &&
+        !(item.chapter || '').toLowerCase().includes('download')
       )
       
       const processedComics = filteredComics.map(comic => {

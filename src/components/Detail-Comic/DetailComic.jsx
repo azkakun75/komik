@@ -212,7 +212,7 @@ const DetailComic = () => {
                 processedLink: item.processedLink
             } 
         });
-        window.location.reload(); 
+        window.scrollTo(0, 0);
     }
 
     const isLatestChapter = history?.lastChapter === comic.chapter;

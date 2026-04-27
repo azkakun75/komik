@@ -19,9 +19,13 @@ const app = express();
 
 // Enable CORS
 const allowedOrigins = [
-  '',
-  '',
-  'https://afzn-studio-toon.vercel.app'
+  'http://localhost:5173',
+  'http://localhost:8080',
+  'https://afzn-studio-toon.vercel.app',
+  ...(process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
 ];
 
 app.use(cors({

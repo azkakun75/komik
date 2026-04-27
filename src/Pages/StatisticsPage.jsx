@@ -17,7 +17,7 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5173' || 'http://localhost:8080' || 'http://localhost:8062';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8062';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 

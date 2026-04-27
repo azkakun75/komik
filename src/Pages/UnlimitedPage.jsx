@@ -4,10 +4,15 @@ import SEO from '../components/SEO'
 import { useTheme } from '../contexts/ThemeContext'
 
 const UnlimitedPage = () => {
-    const { setTheme } = useTheme()
+    const { theme, setTheme } = useTheme()
 
     useEffect(() => {
+        const previousTheme = theme
         setTheme('dark')
+        return () => {
+            setTheme(previousTheme)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setTheme])
     
     return (

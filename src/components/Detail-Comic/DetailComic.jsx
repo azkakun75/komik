@@ -195,7 +195,14 @@ const DetailComic = () => {
         if (chapterData) {
             chapterToRead = chapterData;
         } else if (comicDetail?.chapters && comicDetail.chapters.length > 0) {
-            chapterToRead = comicDetail.chapters[0];
+            // "Baca Dari Awal" should open the FIRST chapter ever (smallest chapter
+            // number), not the latest. Sanka returns chapters in latest-first
+            // order, so we sort defensively by parsed chapter number to handle
+            // either ordering and pick the oldest.
+            const sortedAsc = [...comicDetail.chapters].sort(
+                (a, b) => (parseFloat(a.chapter) || 0) - (parseFloat(b.chapter) || 0)
+            );
+            chapterToRead = sortedAsc[0];
         } else {
             alert('No chapters available');
             return;

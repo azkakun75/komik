@@ -1,19 +1,20 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import CardUnlimitedComic from '../components/Home/CardUnlimitedComic'
 import SEO from '../components/SEO'
 import { useTheme } from '../contexts/ThemeContext'
 
 const UnlimitedPage = () => {
     const { theme, setTheme } = useTheme()
+    const previousThemeRef = useRef(theme)
 
     useEffect(() => {
-        const previousTheme = theme
+        const previousTheme = previousThemeRef.current
         setTheme('dark')
         return () => {
             setTheme(previousTheme)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setTheme])
+    }, [])
     
     return (
         <>

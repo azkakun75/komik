@@ -33,20 +33,46 @@ app.use(cors({
   credentials: true
 }));
 
-// Parse JSON bodies
-app.use(express.json());
+// Parse JSON bodies (cap body size to keep abusive payloads out of SQLite)
+app.use(express.json({ limit: '8kb' }));
+
+// Per-IP rate limiting for /api/track (in-memory, no extra deps)
+const TRACK_WINDOW_MS = 60 * 1000;
+const TRACK_MAX_PER_WINDOW = 60;
+const trackHits = new Map();
+const trimToString = (value, max) => {
+  if (typeof value !== 'string') return '';
+  return value.length > max ? value.slice(0, max) : value;
+};
 
 // Track page view
 app.post('/api/track', async (req, res) => {
   try {
-    const { pagePath, pageTitle, referrer } = req.body;
-    const userAgent = req.get('user-agent') || '';
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = trackHits.get(ip);
+    if (entry && now - entry.start < TRACK_WINDOW_MS) {
+      if (entry.count >= TRACK_MAX_PER_WINDOW) {
+        return res.status(429).json({ success: false, error: 'Too many requests' });
+      }
+      entry.count += 1;
+    } else {
+      trackHits.set(ip, { start: now, count: 1 });
+    }
+
+    const pagePath = trimToString(req.body?.pagePath, 500);
+    const pageTitle = trimToString(req.body?.pageTitle, 200);
+    const referrer = trimToString(req.body?.referrer, 1000);
+    if (!pagePath) {
+      return res.status(400).json({ success: false, error: 'pagePath is required' });
+    }
+    const userAgent = trimToString(req.get('user-agent') || '', 500);
 
     // Detect device type from user agent
     const deviceType = detectDeviceType(userAgent);
 
     // Get country from Cloudflare header or default to Unknown
-    const country = req.get('cf-ipcountry') || 'Unknown';
+    const country = trimToString(req.get('cf-ipcountry') || 'Unknown', 10);
 
     // Insert page view with device and country info
     insertPageView.run(pagePath, pageTitle, userAgent, referrer, deviceType, country);
@@ -149,8 +175,7 @@ app.get('/api/health', (req, res) => {
 });
 
 const port = process.env.PORT || 8062;
-const API_URL = process.env.VITE_API_URL || '';
 
 app.listen(port, () => {
-  console.log(`🚀 Statistics API server running on ${API_URL}`);
+  console.log(`🚀 Statistics API server running on http://localhost:${port}`);
 });

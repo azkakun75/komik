@@ -291,7 +291,7 @@ const ReadComic = () => {
 
             {/* Bottom Navigation Bar */}
             <div className={`fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-2xl z-50 border-t border-gray-200 dark:border-gray-800 transition-all ${isFullscreen ? 'hidden' : 'block'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-4 gap-4">
                         {/* Previous Chapter Button */}
                         <button

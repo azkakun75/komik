@@ -154,36 +154,42 @@ const ReadComic = () => {
         });
     };
 
+    // Determine reading direction relative to the chapters array. Sanka
+    // typically returns descending order (latest chapter first), but we infer
+    // it dynamically so the navigation is robust to either ordering.
+    const isChaptersDescending =
+        currentChapters.length >= 2 &&
+        (parseFloat(currentChapters[0]?.chapter) || 0) >
+            (parseFloat(currentChapters[currentChapters.length - 1]?.chapter) || 0);
+    // "Next" in reading order means the newer / higher-numbered chapter.
+    const newerDelta = isChaptersDescending ? -1 : +1;
+    const olderDelta = -newerDelta;
+
+    const goToChapter = (chapterEntry) => {
+        if (!chapterEntry || !chapterEntry.link) return;
+        navigate(`/read-comic/${slug}/chapter-${chapterEntry.chapter}`, {
+            state: {
+                chapterLink: chapterEntry.link,
+                comicTitle,
+                chapterNumber: chapterEntry.chapter,
+                comicDetailState,
+            },
+        });
+    };
+
     const handleNextChapter = () => {
-        const nextChapterSlug = navigation.nextChapter;
-        if (nextChapterSlug) {
-            const newChapterNumber = nextChapterSlug.split('-').pop(); 
-            
-            navigate(`/read-comic/${slug}/${nextChapterSlug}`, { 
-                state: { 
-                    chapterLink: nextChapterSlug, 
-                    comicTitle: comicTitle, 
-                    chapterNumber: newChapterNumber,
-                    comicDetailState: comicDetailState
-                } 
-            });
-        }
+        // Prefer the in-memory chapters list because every entry there has a
+        // known-good `.link` shape (the same shape the initial fetch consumed).
+        // The upstream `navigation.nextChapter` is a different URL format that
+        // produces 404s when concatenated to /comic/chapter.
+        const nextCh = currentChapters[currentChapterIndex + newerDelta];
+        if (nextCh) return goToChapter(nextCh);
+        // Fallback: if list is empty, ignore -- we can't reliably navigate.
     };
 
     const handlePrevChapter = () => {
-        const prevChapterSlug = navigation.previousChapter;
-        if (prevChapterSlug) {
-            const newChapterNumber = prevChapterSlug.split('-').pop(); 
-
-            navigate(`/read-comic/${slug}/${prevChapterSlug}`, { 
-                state: { 
-                    chapterLink: prevChapterSlug, 
-                    comicTitle: comicTitle, 
-                    chapterNumber: newChapterNumber,
-                    comicDetailState: comicDetailState 
-                } 
-            });
-        }
+        const prevCh = currentChapters[currentChapterIndex + olderDelta];
+        if (prevCh) return goToChapter(prevCh);
     };
 
     if (loading) {
@@ -220,8 +226,8 @@ const ReadComic = () => {
         );
     }
 
-    const hasNext = !!navigation.nextChapter;
-    const hasPrev = !!navigation.previousChapter;
+    const hasNext = !!currentChapters[currentChapterIndex + newerDelta];
+    const hasPrev = !!currentChapters[currentChapterIndex + olderDelta];
 
     return (
         <div ref={comicContainerRef} className={`relative bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-[#0a0a0a] dark:via-[#121212] dark:to-[#1a1a1a] min-h-screen transition-colors ${isFullscreen ? 'overflow-y-auto' : ''}`}>

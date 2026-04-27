@@ -40,6 +40,13 @@ app.use(express.json({ limit: '8kb' }));
 const TRACK_WINDOW_MS = 60 * 1000;
 const TRACK_MAX_PER_WINDOW = 60;
 const trackHits = new Map();
+// Sweep stale rate-limit entries so the Map can't grow without bound on long-running servers
+setInterval(() => {
+  const cutoff = Date.now() - TRACK_WINDOW_MS;
+  for (const [ip, entry] of trackHits) {
+    if (entry.start < cutoff) trackHits.delete(ip);
+  }
+}, TRACK_WINDOW_MS).unref?.();
 const trimToString = (value, max) => {
   if (typeof value !== 'string') return '';
   return value.length > max ? value.slice(0, max) : value;
@@ -86,7 +93,7 @@ app.post('/api/track', async (req, res) => {
     res.json({ success: true, message: 'Page view tracked' });
   } catch (error) {
     console.error('Error tracking page view:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
@@ -126,7 +133,7 @@ app.get('/api/stats/hourly', (req, res) => {
 // Get popular pages
 app.get('/api/stats/popular', (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
     const popularPages = getPopularPages.all(limit);
     res.json(popularPages);
   } catch (error) {
@@ -138,7 +145,7 @@ app.get('/api/stats/popular', (req, res) => {
 // Get recent views
 app.get('/api/stats/recent', (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
     const recentViews = getRecentViews.all(limit);
     res.json(recentViews);
   } catch (error) {

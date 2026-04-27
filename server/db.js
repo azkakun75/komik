@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -8,6 +9,9 @@ const __dirname = dirname(__filename);
 // Initialize database
 // Store database in /app/data directory (not /app/server to avoid volume mount conflicts)
 const dbPath = process.env.DB_PATH || join(__dirname, '../data/statistics.db');
+// better-sqlite3 does not create parent directories; create them ourselves so
+// `npm run server` works from a fresh clone without a manual `mkdir data` step.
+mkdirSync(dirname(dbPath), { recursive: true });
 const db = new Database(dbPath);
 
 // Create tables

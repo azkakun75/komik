@@ -4,17 +4,20 @@ import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faChevronLeft, faChevronRight, faHome, faBookOpen, faExpand } from '@fortawesome/free-solid-svg-icons';
 
+const deslugify = (s = '') => s.replace(/-+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
 const ReadComic = () => {
     const navigate = useNavigate();
     const { slug, chapterSlug } = useParams();
     const location = useLocation();
-    
-    const { 
-        chapterLink, 
-        comicTitle, 
-        chapterNumber,
-        comicDetailState
-    } = location.state || {};
+
+    // When the user reaches this page via direct URL / refresh / shared link,
+    // location.state is null. Fall back to URL params so the reader still works.
+    const state = location.state || {};
+    const chapterLink = state.chapterLink || (chapterSlug ? `/${chapterSlug}` : null);
+    const comicTitle = state.comicTitle || (slug ? deslugify(slug) : '');
+    const chapterNumber = state.chapterNumber || (chapterSlug ? chapterSlug.split('-').pop() : '');
+    const comicDetailState = state.comicDetailState || null;
     
     const [pages, setPages] = useState([]);
     const [loading, setLoading] = useState(true);

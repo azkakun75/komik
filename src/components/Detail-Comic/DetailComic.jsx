@@ -5,11 +5,20 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHome, faPlay, faBookOpen, faClock, faFire, faStar } from '@fortawesome/free-solid-svg-icons'
 import SkeletonLoader from '../SkeletonLoader'
 
+const deslugify = (s = '') => s.replace(/-+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+
 const DetailComic = () => {
     const navigate = useNavigate()
     const { slug } = useParams()
     const location = useLocation()
-    const { comic, processedLink } = location.state || {}
+    // Fall back to URL slug so the page survives refresh / direct navigation /
+    // shared links (location.state is null in those cases).
+    const stateComic = location.state?.comic || null
+    const stateProcessedLink = location.state?.processedLink || null
+    const processedLink = stateProcessedLink || slug
+    const [comic, setComic] = useState(
+        stateComic || (slug ? { title: deslugify(slug), image: '', chapter: '', source: '', link: '', popularity: '' } : null)
+    )
     const [comicDetail, setComicDetail] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -28,6 +37,20 @@ const DetailComic = () => {
                 }
 
                 setComicDetail(response.data)
+                // Hydrate the lightweight `comic` object from the API response
+                // when the user landed here via direct URL (no nav state).
+                if (!stateComic) {
+                    const d = response.data
+                    setComic((prev) => ({
+                        ...(prev || {}),
+                        title: d.title || prev?.title || deslugify(slug || ''),
+                        image: d.thumbnail || d.image || prev?.image || '',
+                        chapter: prev?.chapter || (d.chapters?.[0]?.chapter ?? ''),
+                        source: prev?.source || d.type || '',
+                        link: prev?.link || d.url || '',
+                        popularity: prev?.popularity || d.rating || '',
+                    }))
+                }
                 setLoading(false)
             } catch (err) {
                 console.error("Error fetching comic detail:", err)
@@ -63,9 +86,9 @@ const DetailComic = () => {
                     };
                 });
                 
-               const filteredRecommendations = processedRecommendations.filter(item => 
-                    !item.title.toLowerCase().includes('apk') && 
-                    !item.chapter.toLowerCase().includes('download')
+               const filteredRecommendations = processedRecommendations.filter(item =>
+                    !(item.title || '').toLowerCase().includes('apk') &&
+                    !(item.chapter || '').toLowerCase().includes('download')
                 );
 
                 setRecommendations(filteredRecommendations.filter(r => r.slug !== slug).slice(0, 8));

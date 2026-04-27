@@ -32,6 +32,10 @@ pnpm-debug.log*
 server/*.db
 server/*.sqlite
 server/*.sqlite3
+data/
+data/*.db
+data/*.sqlite
+data/*.sqlite3
 
 # Misc
 .cache

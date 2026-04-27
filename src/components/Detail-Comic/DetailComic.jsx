@@ -192,29 +192,42 @@ const DetailComic = () => {
     const handleReadComic = (chapterData = null) => {
         let chapterToRead;
 
+        // Chapter labels look like "Chapter 6", so parseFloat on the whole
+        // string returns NaN. Extract the first numeric run instead.
+        const extractChapterNumber = (entry) => {
+            const match = String(entry?.chapter ?? '').match(/\d+(?:\.\d+)?/);
+            return match ? parseFloat(match[0]) : Infinity;
+        };
+
         if (chapterData) {
             chapterToRead = chapterData;
         } else if (comicDetail?.chapters && comicDetail.chapters.length > 0) {
-            // "Baca Dari Awal" should open the FIRST chapter ever (smallest chapter
-            // number), not the latest. Sanka returns chapters in latest-first
-            // order, so we sort defensively by parsed chapter number to handle
-            // either ordering and pick the oldest.
+            // "Baca Dari Awal" should open the chapter with the smallest
+            // number (chapter 1), not chapters[0] (which is the latest because
+            // Sanka returns chapters in descending order).
             const sortedAsc = [...comicDetail.chapters].sort(
-                (a, b) => (parseFloat(a.chapter) || 0) - (parseFloat(b.chapter) || 0)
+                (a, b) => extractChapterNumber(a) - extractChapterNumber(b)
             );
             chapterToRead = sortedAsc[0];
         } else {
             alert('No chapters available');
             return;
         }
-        
-        navigate(`/read-comic/${slug}/chapter-${chapterToRead.chapter}`, { 
-            state: { 
+
+        // The route param expects a clean number like `chapter-6`, not
+        // `chapter-Chapter 6`. Pull the numeric part out of the label.
+        const numericChapter = (() => {
+            const m = String(chapterToRead.chapter ?? '').match(/\d+(?:\.\d+)?/);
+            return m ? m[0] : String(chapterToRead.chapter ?? '');
+        })();
+
+        navigate(`/read-comic/${slug}/chapter-${numericChapter}`, {
+            state: {
                 chapterLink: chapterToRead.link,
                 comicTitle: comic.title,
-                chapterNumber: chapterToRead.chapter,
-                comicDetailState: { comic: comic, processedLink: processedLink }, 
-            } 
+                chapterNumber: numericChapter,
+                comicDetailState: { comic: comic, processedLink: processedLink },
+            }
         })
     }
 

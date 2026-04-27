@@ -154,42 +154,59 @@ const ReadComic = () => {
         });
     };
 
-    // Determine reading direction relative to the chapters array. Sanka
-    // typically returns descending order (latest chapter first), but we infer
-    // it dynamically so the navigation is robust to either ordering.
-    const isChaptersDescending =
-        currentChapters.length >= 2 &&
-        (parseFloat(currentChapters[0]?.chapter) || 0) >
-            (parseFloat(currentChapters[currentChapters.length - 1]?.chapter) || 0);
-    // "Next" in reading order means the newer / higher-numbered chapter.
-    const newerDelta = isChaptersDescending ? -1 : +1;
-    const olderDelta = -newerDelta;
+    // The chapter endpoint returns navigation slugs like
+    // "the-heros-bereaved-family-chapter-4" — no leading or trailing slash —
+    // but the fetch URL is `comic/chapter${chapterLink}`, so chapterLink MUST
+    // start with `/` (and the working chapter list links also have a trailing
+    // `/`). Normalize defensively for any input shape.
+    const normalizeChapterLink = (raw) => {
+        if (!raw) return null;
+        let s = String(raw).trim();
+        try {
+            s = new URL(s, 'https://www.sankavollerei.com').pathname;
+        } catch {
+            // Not a URL: leave the raw slug.
+        }
+        if (!s.startsWith('/')) s = `/${s}`;
+        if (!s.endsWith('/')) s = `${s}/`;
+        return s;
+    };
 
-    const goToChapter = (chapterEntry) => {
-        if (!chapterEntry || !chapterEntry.link) return;
-        navigate(`/read-comic/${slug}/chapter-${chapterEntry.chapter}`, {
+    // Slug shape is `<comic>-chapter-<n>`; extract the trailing number for the
+    // route URL and the chapterNumber state field.
+    const extractChapterNumberFromSlug = (raw) => {
+        const match = String(raw || '').match(/chapter-(\d+(?:\.\d+)?)/i);
+        return match ? match[1] : '';
+    };
+
+    const handleNextChapter = () => {
+        const nextSlug = navigation.nextChapter;
+        if (!nextSlug) return;
+        const nextLink = normalizeChapterLink(nextSlug);
+        const newChapterNumber = extractChapterNumberFromSlug(nextSlug);
+        navigate(`/read-comic/${slug}/chapter-${newChapterNumber}`, {
             state: {
-                chapterLink: chapterEntry.link,
+                chapterLink: nextLink,
                 comicTitle,
-                chapterNumber: chapterEntry.chapter,
+                chapterNumber: newChapterNumber,
                 comicDetailState,
             },
         });
     };
 
-    const handleNextChapter = () => {
-        // Prefer the in-memory chapters list because every entry there has a
-        // known-good `.link` shape (the same shape the initial fetch consumed).
-        // The upstream `navigation.nextChapter` is a different URL format that
-        // produces 404s when concatenated to /comic/chapter.
-        const nextCh = currentChapters[currentChapterIndex + newerDelta];
-        if (nextCh) return goToChapter(nextCh);
-        // Fallback: if list is empty, ignore -- we can't reliably navigate.
-    };
-
     const handlePrevChapter = () => {
-        const prevCh = currentChapters[currentChapterIndex + olderDelta];
-        if (prevCh) return goToChapter(prevCh);
+        const prevSlug = navigation.previousChapter;
+        if (!prevSlug) return;
+        const prevLink = normalizeChapterLink(prevSlug);
+        const newChapterNumber = extractChapterNumberFromSlug(prevSlug);
+        navigate(`/read-comic/${slug}/chapter-${newChapterNumber}`, {
+            state: {
+                chapterLink: prevLink,
+                comicTitle,
+                chapterNumber: newChapterNumber,
+                comicDetailState,
+            },
+        });
     };
 
     if (loading) {
@@ -226,8 +243,8 @@ const ReadComic = () => {
         );
     }
 
-    const hasNext = !!currentChapters[currentChapterIndex + newerDelta];
-    const hasPrev = !!currentChapters[currentChapterIndex + olderDelta];
+    const hasNext = !!navigation.nextChapter;
+    const hasPrev = !!navigation.previousChapter;
 
     return (
         <div ref={comicContainerRef} className={`relative bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-[#0a0a0a] dark:via-[#121212] dark:to-[#1a1a1a] min-h-screen transition-colors ${isFullscreen ? 'overflow-y-auto' : ''}`}>

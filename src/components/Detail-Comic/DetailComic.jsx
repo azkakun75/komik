@@ -258,7 +258,17 @@ const DetailComic = () => {
         window.scrollTo(0, 0);
     }
 
-    const isLatestChapter = history?.lastChapter === comic.chapter;
+    // PR #4 changed `history.lastChapter` to a numeric-only string (e.g. "6")
+    // while the API still returns full labels (e.g. "Chapter 6") in
+    // `comic.chapter` and `chapter.chapter`. Normalize both sides to the
+    // numeric portion so highlighting and the "Lanjutkan Membaca" guard work
+    // regardless of which format reaches the component.
+    const chapterNum = (raw) => {
+        const m = String(raw ?? '').match(/\d+(?:\.\d+)?/);
+        return m ? m[0] : '';
+    };
+    const isLatestChapter =
+        !!history && chapterNum(history.lastChapter) === chapterNum(comic.chapter);
 
     return (
         <div className="relative bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-[#0a0a0a] dark:via-[#121212] dark:to-[#1a1a1a] min-h-screen text-gray-900 dark:text-gray-100 transition-colors py-8">
@@ -382,12 +392,12 @@ const DetailComic = () => {
                                         key={index}
                                         onClick={() => handleReadComic(chapter)}
                                         className={`group relative p-3 rounded-xl text-center text-sm font-semibold transition-all duration-300 ${
-                                            String(chapter.chapter) === String(history?.lastChapter)
+                                            chapterNum(chapter.chapter) === chapterNum(history?.lastChapter)
                                                 ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-lg shadow-yellow-500/30 scale-105'
                                                 : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-indigo-500/30'
                                         }`}
                                     >
-                                        {String(chapter.chapter) === String(history?.lastChapter) && (
+                                        {chapterNum(chapter.chapter) === chapterNum(history?.lastChapter) && (
                                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
                                         )}
                                         {chapter.chapter}
